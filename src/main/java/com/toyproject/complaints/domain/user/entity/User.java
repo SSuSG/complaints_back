@@ -66,18 +66,29 @@ public class User extends BaseTimeEntity{
     private boolean active;
 
     /**
+     *  유저 권한
+     */
+    private Role role;
+
+    /**
      *  계정 생성자
      */
     @OneToOne
-    @JoinColumn(name = "registerUser_id")
+    @JoinColumn(name = "register_user_id")
     private User registerUser;
+
+    /**
+     *  계정 수정을 당한 유저
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "updated_user_id")
+    private User updatedUser;
 
     /**
      *  계정 수정자
      */
-    @OneToOne
-    @JoinColumn(name = "updateUser_id")
-    private User updateUser;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "updatedUser")
+    private List<User> doUpdateUsers;
 
 
     /**
