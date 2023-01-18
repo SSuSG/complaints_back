@@ -2,7 +2,7 @@ package com.toyproject.complaints.global.exception;
 
 public class ExistEmailException extends RuntimeException{
     public ExistEmailException() {
-        super("이미 존재하는 이메일 입니다.");
+        super(ErrorCode.EXIST_EMAIL_EXCEPTION.getErrorMessage());
     }
 
     public ExistEmailException(String message) {
