@@ -2,7 +2,7 @@ package com.toyproject.complaints.global.exception;
 
 public class UserNotFoundException extends RuntimeException{
     public UserNotFoundException() {
-        super("회원을 찾을 수 없습니다.");
+        super(ErrorCode.NOT_EXIST_USER_EXCEPTION.getErrorMessage());
     }
 
     public UserNotFoundException(String message) {

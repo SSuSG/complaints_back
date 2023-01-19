@@ -1,0 +1,13 @@
+spring:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: psk980331@gmail.com
+    password: gxcqpezgxajjlcbd
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls: # 추가 안하면 SMTPSendFailedException
+            enalble: true
+            required: true
