@@ -37,8 +37,10 @@ public class SecurityConfig {
 //                .antMatchers("/api/user/**").permitAll()
 //                .antMatchers("/swagger-ui/**", "/v2/api-docs", "/swagger-resources/**",
 //                        "/swagger-ui.html", "/webjars/**", "/swagger/**").permitAll()
-//                .anyRequest().authenticated()
+                .antMatchers("/api/admins/**").hasRole("ADMIN")
                 .antMatchers("/swagger-ui/**").permitAll() //해당 API에 대해서는 모든 요청을 허가한다는 설정
+                .antMatchers("/api/users/**").permitAll()
+                .anyRequest().authenticated()
                 .and()
                 // exception handling 할 때 우리가 만든 클래스를 추가
                 .exceptionHandling()
