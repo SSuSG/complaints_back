@@ -54,7 +54,7 @@ public class AccountService {
                 }
 
                 //생성된 계정의 등록자,수정자,등록일,수정일,비밀번호 초기화
-                createdAccount.initialUserAndTimeAtCreateAccount(curLoginUser , passwordEncoder.encode(tempPw));
+                createdAccount.initialUserAndTimeAtCreateAccount(curLoginUser , tempPw);
 
                 return userRepository.save(createdAccount).getId();
             }
