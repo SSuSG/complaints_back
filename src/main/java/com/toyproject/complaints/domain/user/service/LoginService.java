@@ -60,8 +60,8 @@ public class LoginService {
     private boolean compareIpAddressAfterSuccessLogin(User loginUser , String accessIp){
         log.info("LoginService_compareIpAddressAfterSuccessLogin");
 
-        //첫 로그인 시 현재 ip 저장
         if(loginUser.getIpList().size() == 0){
+            log.info("첫 로그인 시 현재 ip 저장");
             IpAddress ipAddress = IpAddress.builder().ip(accessIp).user(loginUser).build();
             loginUser.getIpList().add(ipAddress);
             return true;
