@@ -101,7 +101,9 @@ public class User extends BaseTimeEntity{
 
     //계정 생성시 등록자,수정자,등록시간,수정시간 초기화
     public void initialUserAndTimeAtCreateAccount(User adminAccount , String userPw){
+        this.doUpdateUsers = new ArrayList<>();
         this.registerUser = adminAccount;
+        this.userPw = "{noop}" + userPw;
         this.doUpdateUsers.add(adminAccount);
         this.createdTime = LocalDateTime.now();
         this.updatedTime = LocalDateTime.now();
