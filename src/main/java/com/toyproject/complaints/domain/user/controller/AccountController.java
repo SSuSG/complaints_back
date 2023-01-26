@@ -23,6 +23,9 @@ public class AccountController {
 
     private final AccountService accountService;
 
+    /**
+     * @throws MessagingException   -> 메일 발송에 실패할 경우
+     */
     @ApiOperation(value = "사용자 계정 생성" , notes = "슈퍼관리자가 사용자의 계정을 생성합니다.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "계정생성 성공"),
@@ -34,10 +37,11 @@ public class AccountController {
     @PostMapping("/admins/users")
     public ResponseResult createUserAccount(@Valid @RequestBody CreateUserAccountRequestDto createUserAccountRequestDto) throws MessagingException {
         log.info("AccountController_createUserAccount || 관리자가 새로운 계정 생성");
-        if(accountService.createUserAccount(createUserAccountRequestDto) != null){
+        if(accountService.createUserAccount(createUserAccountRequestDto) != null)
             return ResponseResult.successResponse;
-        }else{
+        else
             return ResponseResult.failResponse;
-        }
     }
+
+    //계정 탈퇴?
 }

@@ -29,10 +29,16 @@ public class AccountService {
     private final PasswordEncoder passwordEncoder;
     private final Mail mailService;
 
+    /**
+     *
+     * @throws ExistEmailException      -> 신규계정 생성시 이미 존재하는 이메일이 존재할 경우
+     * @throws MessagingException       -> 신규계정 성공후 이메일로 임시비밀번호 발송에 실패 할 경우
+     * @throws InValidAccessException   -> 신규계정 생성시도를 슈퍼관리자권한을 가지지 못한 사용자가 했을경우
+     * @throws UserNotFoundException    -> 현재 로그인한 사용자의 계정이 존재하지 않는경우
+     */
     @Transactional
-    public Long createUserAccount(CreateUserAccountRequestDto createUserAccountRequestDto) throws ExistEmailException, MessagingException,InValidAccessException,UserNotFoundException{
+    public Long createUserAccount(CreateUserAccountRequestDto createUserAccountRequestDto) throws ExistEmailException , MessagingException , InValidAccessException , UserNotFoundException {
         log.info("AccountService_createUserAccount -> 관리자에 의한 신규계정 생성");
-
         User createdAccount = createUserAccountRequestDto.toUserEntity();
 
         //현재 로그인한 계정
@@ -45,15 +51,15 @@ public class AccountService {
             if(checkEmailDuplicate(createUserAccountRequestDto.getUserEmail())){
                 throw new ExistEmailException();
             }else {
-                //임시 비밀번호 생성
+                log.info("임시 비밀번호 생성");
                 String tempPw = mailService.createKey();
 
-                //계정 성공 생성시 이메일로 임시비밀번호 발송
+                log.info("계정 성공 생성시 이메일로 임시비밀번호 발송");
                 if(!mailService.sendSimpleMessageForTempPw(createdAccount.getUserEmail() , tempPw)){
                     throw new MessagingException();
                 }
 
-                //생성된 계정의 등록자,수정자,등록일,수정일,비밀번호 초기화
+                log.info("생성된 계정의 등록자,수정자,등록일,수정일,비밀번호 초기화");
                 createdAccount.initialUserAndTimeAtCreateAccount(curLoginUser , tempPw);
 
                 return userRepository.save(createdAccount).getId();
@@ -65,7 +71,6 @@ public class AccountService {
 
     public boolean checkEmailDuplicate(String email) {
         log.info("AccountService_checkEmailDuplicate -> 계정생성시 이메일 중복 체크");
-
         if(userRepository.existsByUserEmail(email))
             return true;
         return false;
