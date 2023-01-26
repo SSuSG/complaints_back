@@ -28,6 +28,9 @@ public class LoginController {
 
     private final LoginService loginService;
 
+    /**
+     * @throws LoginFailException   -> IP,PW 불일치로 로그인 실패할 경우
+     */
     @ApiOperation(value = "로그인 시도" , notes = "사용자가 로그인을 시도합니다.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "로그인 성공"),
@@ -41,17 +44,19 @@ public class LoginController {
         log.info("LoginController_signIn -> 로그인");
         String loginResult = loginService.login(loginRequestDto, response);
 
-        if(LoginStatus.SUCCESS.name().equals(loginResult)){
+        if(LoginStatus.SUCCESS.name().equals(loginResult))
             return new SingleResponseResult<LoginSuccessResponseDto>(loginService.getLoginUserInfo(loginRequestDto));
-        }else if(LoginStatus.LOCK.name().equals(loginResult)){
+        else if(LoginStatus.LOCK.name().equals(loginResult))
             return ResponseResult.LockResponse;
-        }else if(LoginStatus.PWFAIL.name().equals(loginResult)){
+        else if(LoginStatus.PWFAIL.name().equals(loginResult))
             throw new LoginFailException();
-        }else if(LoginStatus.IPFAIL.name().equals(loginResult)){
+        else if(LoginStatus.IPFAIL.name().equals(loginResult))
             throw new LoginFailException();
-        }else{
+        else
             return ResponseResult.failResponse;
-        }
-
     }
+
+    //계정잠금해제 인증번호 요청
+
+    //계정잠금해제 인증번호 인증
 }

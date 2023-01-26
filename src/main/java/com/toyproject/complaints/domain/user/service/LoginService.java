@@ -27,9 +27,11 @@ public class LoginService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
-    //로그인
+    /**
+     * @throws UserNotFoundException    ->현재 로그인한 사용자의 계정이 존재하지 않는경우
+     */
     @Transactional
-    public String login(LoginRequestDto loginRequestDto, HttpServletResponse response) throws UserNotFoundException, LoginFailException {
+    public String login(LoginRequestDto loginRequestDto, HttpServletResponse response) throws UserNotFoundException {
         log.info("LoginService_login -> 로그인 시도");
         User loginUser = userRepository.findByUserEmail(loginRequestDto.getUserEmail()).orElseThrow( () -> new UserNotFoundException());
 
@@ -67,7 +69,7 @@ public class LoginService {
             return true;
         }else{
             for (IpAddress ipAddress : loginUser.getIpList()) {
-                //현재 ip가 등록된 ip와 같으면 로그인 성공
+                log.info("현재 IP와 등록된 IP와 일치하면 로그인 성공");
                 if(accessIp.equals(ipAddress.getIp()))
                     return true;
             }
@@ -80,14 +82,12 @@ public class LoginService {
         String accessToken = jwtTokenProvider.createAccessToken(loginUser.getUserEmail());
         String refreshToken = jwtTokenProvider.createRefreshToken(loginUser.getUserEmail());
 
-        //response에 토큰들 담아줌
+        log.info("Response에 Access Token,Refresh Token 담기");
         jwtTokenProvider.setHeaderAccessToken(response,accessToken);
         jwtTokenProvider.setHeaderRefreshToken(response,refreshToken);
 
-        //유저 db에 refreshToKen저장
         loginUser.setRefreshToken(refreshToken);
-
-        //로그인 성공시 비밀번호 불일치횟수 초기화
+        log.info("로그인 성공시 비밀번호 불일치 횟수 초기화");
         loginUser.initializationInValidAccessCount();
     }
 
@@ -96,7 +96,6 @@ public class LoginService {
         log.info("LoginService_getLoginUserInfo -> 로그인 성공후 로그인 시도 유저 정보 반환");
         User loginUser = userRepository.findByUserEmail(loginRequestDto.getUserEmail()).orElseThrow( () -> new UserNotFoundException());
         return loginUser.toLoginSuccessResponseDto(loginUser.getRole());
-
     }
 
 }
