@@ -12,7 +12,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,21 +41,19 @@ public class LoginController {
     @PostMapping("/users")
     public ResponseResult signIn(@Valid @RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) throws LoginFailException {
         log.info("LoginController_signIn -> 로그인");
-        String loginResult = loginService.login(loginRequestDto, response);
+        LoginStatus loginResult = loginService.login(loginRequestDto, response);
 
-        if(LoginStatus.SUCCESS.name().equals(loginResult))
+        if(LoginStatus.SUCCESS.equals(loginResult))
             return new SingleResponseResult<LoginSuccessResponseDto>(loginService.getLoginUserInfo(loginRequestDto));
-        else if(LoginStatus.LOCK.name().equals(loginResult))
+        else if(LoginStatus.LOCK.equals(loginResult))
             return ResponseResult.LockResponse;
-        else if(LoginStatus.PWFAIL.name().equals(loginResult))
+        else if(LoginStatus.PWFAIL.equals(loginResult))
             throw new LoginFailException();
-        else if(LoginStatus.IPFAIL.name().equals(loginResult))
+        else if(LoginStatus.IPFAIL.equals(loginResult))
             throw new LoginFailException();
         else
             return ResponseResult.failResponse;
     }
 
-    //계정잠금해제 인증번호 요청
 
-    //계정잠금해제 인증번호 인증
 }
