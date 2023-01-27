@@ -31,19 +31,17 @@ public class LoginService {
      * @throws UserNotFoundException    ->현재 로그인한 사용자의 계정이 존재하지 않는경우
      */
     @Transactional
-    public String login(LoginRequestDto loginRequestDto, HttpServletResponse response) throws UserNotFoundException {
+    public LoginStatus login(LoginRequestDto loginRequestDto, HttpServletResponse response) throws UserNotFoundException {
         log.info("LoginService_login -> 로그인 시도");
         User loginUser = userRepository.findByUserEmail(loginRequestDto.getUserEmail()).orElseThrow( () -> new UserNotFoundException());
 
-        if(loginUser.getInValidAccessCnt() >= 5){
-            log.info("현재 로그인 시도계정은 잠금상태입니다.");
-            return LoginStatus.LOCK.name();
-        }
+        if(isLockAccount(loginUser))
+            return LoginStatus.LOCK;
 
         if(!passwordEncoder.matches(loginRequestDto.getUserPw() , loginUser.getUserPw())){
             log.info("로그인 실패 , 비밀번호 틀린횟수 : {}" , loginUser.getInValidAccessCnt());
             loginUser.addInValidAccessCount();
-            return LoginStatus.PWFAIL.name();
+            return LoginStatus.PWFAIL;
         }else{
             log.info("로그인 성공 , IP값 유효성 확인");
             log.info("접속 ip : {}" , loginRequestDto.getIpAddress());
@@ -52,13 +50,22 @@ public class LoginService {
             if(isValidIpAddress){
                 log.info("접속시도 IP와 등록된 IP일치");
                 settingTokenAfterSuccessLogin(loginUser ,response);
-                return LoginStatus.SUCCESS.name();
+                return LoginStatus.SUCCESS;
             }else{
                 log.info("접속시도 IP와 등록된 IP일치실패");
-                return LoginStatus.IPFAIL.name();
+                return LoginStatus.IPFAIL;
             }
         }
     }
+
+    private boolean isLockAccount(User loginUser){
+        if(loginUser.getInValidAccessCnt() >= 5){
+            log.info("현재 로그인 시도계정은 잠금상태입니다.");
+            return true;
+        }
+        return false;
+    }
+
     private boolean compareIpAddressAfterSuccessLogin(User loginUser , String accessIp){
         log.info("LoginService_compareIpAddressAfterSuccessLogin");
 
@@ -91,11 +98,14 @@ public class LoginService {
         loginUser.initializationInValidAccessCount();
     }
 
-    //로그인시 계정의 권한,이메일,유저id 반환
     public LoginSuccessResponseDto getLoginUserInfo(LoginRequestDto loginRequestDto){
         log.info("LoginService_getLoginUserInfo -> 로그인 성공후 로그인 시도 유저 정보 반환");
         User loginUser = userRepository.findByUserEmail(loginRequestDto.getUserEmail()).orElseThrow( () -> new UserNotFoundException());
         return loginUser.toLoginSuccessResponseDto(loginUser.getRole());
     }
+
+
+
+
 
 }
