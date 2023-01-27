@@ -1,12 +1,18 @@
 package com.toyproject.complaints.domain.user.controller;
 
+import com.toyproject.complaints.domain.user.dto.request.CertificateAuthenticationKeyRequestDto;
 import com.toyproject.complaints.domain.user.dto.request.CreateUserAccountRequestDto;
+import com.toyproject.complaints.domain.user.dto.request.SendAuthenticationKeyRequestDto;
 import com.toyproject.complaints.domain.user.service.AccountService;
+import com.toyproject.complaints.domain.user.service.SmsService;
+import com.toyproject.complaints.global.exception.UserNotFoundException;
 import com.toyproject.complaints.global.response.ResponseResult;
 import com.toyproject.complaints.global.response.SingleResponseResult;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.nurigo.java_sdk.exceptions.CoolsmsException;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.mail.MessagingException;
 import javax.validation.Valid;
+import java.time.LocalDateTime;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -22,6 +29,7 @@ import javax.validation.Valid;
 public class AccountController {
 
     private final AccountService accountService;
+    private final SmsService smsService;
 
     /**
      * @throws MessagingException   -> 메일 발송에 실패할 경우
@@ -41,6 +49,24 @@ public class AccountController {
             return ResponseResult.successResponse;
         else
             return ResponseResult.failResponse;
+    }
+
+    //계정잠금해제 인증번호 요청
+    @PostMapping("/user/authKey")
+    public SingleResponseResult<String> sendAuthenticationKey(@Valid @RequestBody SendAuthenticationKeyRequestDto sendAuthenticationKeyRequestDto) throws UserNotFoundException, CoolsmsException {
+        log.info("SignController_sendAuthenticationKey");
+        return new SingleResponseResult<String> (smsService.sendAuthenticationKey(sendAuthenticationKeyRequestDto.getUserEmail()));
+    }
+
+    //계정잠금해제 인증번호 인증
+    @PostMapping("/user/auth")
+    public ResponseResult authAuthenticationKey(@Valid @RequestBody CertificateAuthenticationKeyRequestDto certificateAuthenticationKeyRequestDto) throws UserNotFoundException, MessagingException {
+        log.info("SignController_authAuthenticationKey");
+        if(accountService.RequestUnLock(certificateAuthenticationKeyRequestDto)){
+            return ResponseResult.successResponse;
+        }else{
+            return ResponseResult.failResponse;
+        }
     }
 
     //계정 탈퇴?
