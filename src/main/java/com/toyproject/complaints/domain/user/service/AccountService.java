@@ -1,5 +1,6 @@
 package com.toyproject.complaints.domain.user.service;
 
+import com.toyproject.complaints.domain.user.dto.request.CertificateAuthenticationKeyRequestDto;
 import com.toyproject.complaints.domain.user.dto.request.CreateUserAccountRequestDto;
 import com.toyproject.complaints.domain.user.entity.Role;
 import com.toyproject.complaints.domain.user.entity.User;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.MessagingException;
+
+import static com.toyproject.complaints.global.util.Mail.createKey;
 
 
 @Slf4j
@@ -40,19 +43,14 @@ public class AccountService {
     public Long createUserAccount(CreateUserAccountRequestDto createUserAccountRequestDto) throws ExistEmailException , MessagingException , InValidAccessException , UserNotFoundException {
         log.info("AccountService_createUserAccount -> 관리자에 의한 신규계정 생성");
         User createdAccount = createUserAccountRequestDto.toUserEntity();
-
-        //현재 로그인한 계정
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String loginId = authentication.getName();
-
-        User curLoginUser = userRepository.findByUserEmail(loginId).orElseThrow(() -> new UserNotFoundException());
+        User curLoginUser = getLoginUser();
 
         if(Role.ADMIN.equals(curLoginUser.getRole())){
             if(checkEmailDuplicate(createUserAccountRequestDto.getUserEmail())){
                 throw new ExistEmailException();
             }else {
                 log.info("임시 비밀번호 생성");
-                String tempPw = mailService.createKey();
+                String tempPw = createKey();
 
                 log.info("계정 성공 생성시 이메일로 임시비밀번호 발송");
                 if(!mailService.sendSimpleMessageForTempPw(createdAccount.getUserEmail() , tempPw)){
@@ -69,10 +67,36 @@ public class AccountService {
         }
     }
 
-    public boolean checkEmailDuplicate(String email) {
+    private User getLoginUser(){
+        log.info("현재 로그인 계정 찾기");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String loginId = authentication.getName();
+        User curLoginUser = userRepository.findByUserEmail(loginId).orElseThrow(() -> new UserNotFoundException());
+        return curLoginUser;
+    }
+
+    private boolean checkEmailDuplicate(String email) {
         log.info("AccountService_checkEmailDuplicate -> 계정생성시 이메일 중복 체크");
         if(userRepository.existsByUserEmail(email))
             return true;
+        return false;
+    }
+
+    @Transactional
+    public boolean RequestUnLock(CertificateAuthenticationKeyRequestDto certificateAuthenticationKeyRequestDto) throws UserNotFoundException, MessagingException {
+        log.info("AccountService_RequestUnLock -> 계정잠금해제를 위한 요청 , 잠금해제 성공시 이메일로 임시비밀번호 발송");
+        User loginUser = userRepository.findByUserEmail(certificateAuthenticationKeyRequestDto.getUserEmail()).orElseThrow( () -> new UserNotFoundException());
+
+        if(certificateAuthenticationKeyRequestDto.getAuthenticationKey().equals(loginUser.getLockKey())){
+            loginUser.initializationInValidAccessCount();
+
+            String tempPw = createKey();
+            loginUser.setUserPw(passwordEncoder.encode(tempPw));
+
+            if(!mailService.sendSimpleMessageForTempPw(loginUser.getUserEmail() , tempPw))
+                throw new MessagingException();
+            return true;
+        }
         return false;
     }
 }
