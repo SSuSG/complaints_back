@@ -37,12 +37,12 @@ public class AccountController {
     @ApiOperation(value = "사용자 계정 생성" , notes = "슈퍼관리자가 사용자의 계정을 생성합니다.")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "계정생성 성공"),
-            @ApiResponse(code = 409, message = "중복이메일 존재"),
             @ApiResponse(code = 403, message = "관리자권한이 없는 사용자의 접근"),
             @ApiResponse(code = 408, message = "현재 로그인한 관리자를 찾을수 없음"),
+            @ApiResponse(code = 409, message = "중복이메일 존재"),
             @ApiResponse(code = 500, message = "이메일 전송 실패"),
     })
-    @PostMapping("/admins/users")
+    @PostMapping("/accounts")
     public ResponseResult createUserAccount(@Valid @RequestBody CreateUserAccountRequestDto createUserAccountRequestDto) throws MessagingException {
         log.info("AccountController_createUserAccount || 관리자가 새로운 계정 생성");
         if(accountService.createUserAccount(createUserAccountRequestDto) != null)
@@ -51,22 +51,31 @@ public class AccountController {
             return ResponseResult.failResponse;
     }
 
-    //계정잠금해제 인증번호 요청
-    @PostMapping("/user/authKey")
-    public SingleResponseResult<String> sendAuthenticationKey(@Valid @RequestBody SendAuthenticationKeyRequestDto sendAuthenticationKeyRequestDto) throws UserNotFoundException, CoolsmsException {
+    @ApiOperation(value = "계정잠금해제 인증번호 요청" , notes = "사용자가 잠금된 계정을 해제하기위해 인증번호를 요청")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "인증번호 요청 성공"),
+            @ApiResponse(code = 408, message = "인증번호 요청한 사용자를 찾을수 없음"),
+            @ApiResponse(code = 500, message = "SMS 전송 실패"),
+    })
+    @PostMapping("/accounts/authenticationKey")
+    public SingleResponseResult<String> sendAuthenticationKey(@Valid @RequestBody SendAuthenticationKeyRequestDto sendAuthenticationKeyRequestDto) throws CoolsmsException {
         log.info("SignController_sendAuthenticationKey");
         return new SingleResponseResult<String> (smsService.sendAuthenticationKey(sendAuthenticationKeyRequestDto.getUserEmail()));
     }
 
-    //계정잠금해제 인증번호 인증
-    @PostMapping("/user/auth")
-    public ResponseResult authAuthenticationKey(@Valid @RequestBody CertificateAuthenticationKeyRequestDto certificateAuthenticationKeyRequestDto) throws UserNotFoundException, MessagingException {
+    @ApiOperation(value = "계정잠금해제 인증번호 인증" , notes = "사용자가 잠금된 계정을 해제하기위해 인증번호를 인증")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "계정잠금해제 성공"),
+            @ApiResponse(code = 408, message = "인증 요청한 사용자를 찾을수 없음"),
+            @ApiResponse(code = 500, message = "SMS 전송 실패"),
+    })
+    @PostMapping("/accounts/authentication")
+    public ResponseResult authAuthenticationKey(@Valid @RequestBody CertificateAuthenticationKeyRequestDto certificateAuthenticationKeyRequestDto) throws MessagingException {
         log.info("SignController_authAuthenticationKey");
-        if(accountService.RequestUnLock(certificateAuthenticationKeyRequestDto)){
+        if(accountService.RequestUnLockAndIfSuccessSendTempPw(certificateAuthenticationKeyRequestDto))
             return ResponseResult.successResponse;
-        }else{
+        else
             return ResponseResult.failResponse;
-        }
     }
 
     //계정 탈퇴?
