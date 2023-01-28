@@ -67,8 +67,8 @@ public class AccountService {
         }
     }
 
-    private User getLoginUser(){
-        log.info("현재 로그인 계정 찾기");
+    public User getLoginUser(){
+        log.info("AccountService_getLoginUser -> 현재 로그인 계정 찾기");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String loginId = authentication.getName();
         User curLoginUser = userRepository.findByUserEmail(loginId).orElseThrow(() -> new UserNotFoundException());
@@ -83,8 +83,8 @@ public class AccountService {
     }
 
     @Transactional
-    public boolean RequestUnLock(CertificateAuthenticationKeyRequestDto certificateAuthenticationKeyRequestDto) throws UserNotFoundException, MessagingException {
-        log.info("AccountService_RequestUnLock -> 계정잠금해제를 위한 요청 , 잠금해제 성공시 이메일로 임시비밀번호 발송");
+    public boolean RequestUnLockAndIfSuccessSendTempPw(CertificateAuthenticationKeyRequestDto certificateAuthenticationKeyRequestDto) throws UserNotFoundException, MessagingException {
+        log.info("AccountService_RequestUnLockAndIfSuccessSendTempPw -> 계정잠금해제를 위한 요청 , 잠금해제 성공시 이메일로 임시비밀번호 발송");
         User loginUser = userRepository.findByUserEmail(certificateAuthenticationKeyRequestDto.getUserEmail()).orElseThrow( () -> new UserNotFoundException());
 
         if(certificateAuthenticationKeyRequestDto.getAuthenticationKey().equals(loginUser.getLockKey())){
