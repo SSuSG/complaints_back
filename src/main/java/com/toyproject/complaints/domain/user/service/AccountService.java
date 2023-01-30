@@ -33,7 +33,6 @@ public class AccountService {
     private final Mail mailService;
 
     /**
-     *
      * @throws ExistEmailException      -> 신규계정 생성시 이미 존재하는 이메일이 존재할 경우
      * @throws MessagingException       -> 신규계정 성공후 이메일로 임시비밀번호 발송에 실패 할 경우
      * @throws InValidAccessException   -> 신규계정 생성시도를 슈퍼관리자권한을 가지지 못한 사용자가 했을경우

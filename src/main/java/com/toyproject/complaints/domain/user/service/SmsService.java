@@ -34,10 +34,12 @@ public class SmsService {
     public String sendAuthenticationKey(String userEmail) throws UserNotFoundException, CoolsmsException {
         log.info("SmsService_sendAuthenticationKey -> 계정잠금 해제를위한 sms전송");
         User loginUser = userRepository.findByUserEmail(userEmail).orElseThrow( () -> new UserNotFoundException());
+
         Message coolsms = new Message(apiKey, apiSecretKey);
         String authenticationKey = CreateAuthenticationKey();
         coolsms.send(settingSms(loginUser, authenticationKey));
         loginUser.setLockKey(authenticationKey);
+
         return authenticationKey;
     }
 
@@ -54,6 +56,7 @@ public class SmsService {
     private String CreateAuthenticationKey(){
         log.info("인증키 생성");
         Random rand  = new Random();
+
         String authenticationKey ="";
         for(int i=0; i<4; i++) {
             String ran = Integer.toString(rand.nextInt(10));
