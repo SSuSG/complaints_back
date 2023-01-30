@@ -25,6 +25,13 @@ public class UserInfoService {
     private final UserRepository userRepository;
     private final AccountService accountService;
 
+    /**
+     * @throws ExistIpAddressException  -> 추가할 IP가 이미 존재하는 경우
+     * @throws UserNotFoundException    -> 현재 로그인한 사용자의 계정이 존재하지 않는경우
+     * @throws InValidAccessException   -> 슈퍼관라자가 아닌 사용자가 접근한 경우
+     * @throws InValidIpException       -> 추가할 IP가 형식이 올바르지 않은 경우
+     * @throws AddIpFailException       -> 계정에 등록된 IP갯수가 3개여서 더 이상 추가하지 못하는 경우
+     */
     @Transactional
     public boolean addIpAddress(ChangeIpRequestDto changeIpRequestDto) throws ExistIpAddressException, UserNotFoundException, InValidAccessException, InValidIpException , AddIpFailException{
         log.info("UserInfoService_addIpAddress -> 아이피 추가");
@@ -34,11 +41,17 @@ public class UserInfoService {
         User curLoginUser = accountService.getLoginUser();
         User ipAddedUser = userRepository.findByUserEmail(changeIpRequestDto.getUserEmail()).orElseThrow(() -> new UserNotFoundException());
 
-        if(Role.ADMIN.equals(curLoginUser.getRole()))
-           addIpAddressInDB(ipAddedUser, changeIpRequestDto.getIp());
-        else
+        if(!Role.ADMIN.equals(curLoginUser.getRole()))
             throw new InValidAccessException();
+        addIpAddressInDB(ipAddedUser, changeIpRequestDto.getIp());
         return true;
+    }
+
+    private boolean isValidIpForm(String ip){
+        log.info("UserInfoService_isValidIpForm -> IP유효성 검사");
+        String ipRegex = "(\\d{1,2}|1\\d\\d|2[0-4]\\d|25[0-5])\\.(\\d{1,2}|1\\d\\d|2[0-4]\\d|25[0-5])\\.(\\d{1,2}|1\\d\\d|2[0-4]\\d|25[0-5])\\.(\\d{1,2}|1\\d\\d|2[0-4]\\d|25[0-5])";
+        Pattern pattern = Pattern.compile(ipRegex);
+        return pattern.matcher(ip).matches();
     }
 
     private void addIpAddressInDB(User ipAddedUser , String addIpAddress){
@@ -46,15 +59,14 @@ public class UserInfoService {
         List<IpAddress> userIpList = ipAddedUser.getIpList();
 
         //IP는 최대 3개까지 등록 가능
-        if(userIpList.size() == 3){
+        if(userIpList.size() == 3)
             throw new AddIpFailException();
-        }else{
-            if(hasIp(userIpList , addIpAddress))
-                throw new ExistIpAddressException();
 
-            IpAddress ipAddress = IpAddress.builder().ip(addIpAddress).user(ipAddedUser).build();
-            userIpList.add(ipAddress);
-        }
+        if(hasIp(userIpList , addIpAddress))
+            throw new ExistIpAddressException();
+
+        IpAddress ipAddress = IpAddress.builder().ip(addIpAddress).user(ipAddedUser).build();
+        userIpList.add(ipAddress);
     }
 
     private boolean hasIp(List<IpAddress> userIpList , String addIpAddress){
@@ -66,10 +78,36 @@ public class UserInfoService {
         return false;
     }
 
-    private boolean isValidIpForm(String ip){
-        log.info("UserInfoService_isValidIpForm -> IP유효성 검사");
-        String ipRegex = "(\\d{1,2}|1\\d\\d|2[0-4]\\d|25[0-5])\\.(\\d{1,2}|1\\d\\d|2[0-4]\\d|25[0-5])\\.(\\d{1,2}|1\\d\\d|2[0-4]\\d|25[0-5])\\.(\\d{1,2}|1\\d\\d|2[0-4]\\d|25[0-5])";
-        Pattern pattern = Pattern.compile(ipRegex);
-        return pattern.matcher(ip).matches();
+    @Transactional
+    public boolean deleteIpAddress(ChangeIpRequestDto changeIpRequestDto) {
+        log.info("UserInfoService_deleteIpAddress -> 아이피 삭제");
+        User curLoginUser = accountService.getLoginUser();
+        User ipDeletedUser = userRepository.findByUserEmail(changeIpRequestDto.getUserEmail()).orElseThrow(() -> new UserNotFoundException());
+
+        if(!Role.ADMIN.equals(curLoginUser.getRole()))
+            throw new InValidAccessException();
+
+        if(deleteIpAddressInDb(ipDeletedUser , changeIpRequestDto.getIp()))
+            return true;
+        return false;
     }
+
+    private boolean deleteIpAddressInDb(User ipDeletedUser , String deleteIpAddress){
+        log.info("UserInfoService_deleteIpAddressInDb -> 아이피 삭제 구체적인 로직");
+        List<IpAddress> ipList = ipDeletedUser.getIpList();
+
+        //등록된 ip의 갯수가 1개 미만이라면 오류
+        if(ipList.size() < 1)
+            throw new DeleteIpFailException();
+
+        for(int i = 0 ; i < ipList.size() ; i++){
+            if(ipList.get(i).getIp().equals(deleteIpAddress)){
+                ipList.get(i).setUser(null);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 }
