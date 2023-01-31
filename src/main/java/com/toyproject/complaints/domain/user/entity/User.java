@@ -1,10 +1,12 @@
 package com.toyproject.complaints.domain.user.entity;
 
 import com.toyproject.complaints.domain.user.dto.response.LoginSuccessResponseDto;
+import com.toyproject.complaints.domain.user.dto.response.UserInfoListResponseDto;
 import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,5 +71,12 @@ public class User extends BaseTimeEntity{
     //로그인 성공시 반환할 로그인 유저 정보
     public LoginSuccessResponseDto toLoginSuccessResponseDto(Role role) {
         return LoginSuccessResponseDto.builder().userId(id).userEmail(userEmail).role(role.getRole()).build();
+    }
+
+    //유저 리스트 정보 Dto
+    public UserInfoListResponseDto toUserListInfoResponseDto(){
+        String date = createdTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        return UserInfoListResponseDto.builder().userId(id).name(name).email(userEmail)
+                .employeeIdentificationNum(employeeIdentificationNum).phoneNumber(phoneNumber).regDate(date).build();
     }
 }
