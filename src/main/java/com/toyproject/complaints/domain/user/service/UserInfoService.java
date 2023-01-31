@@ -1,6 +1,7 @@
 package com.toyproject.complaints.domain.user.service;
 
 import com.toyproject.complaints.domain.user.dto.request.ChangeIpRequestDto;
+import com.toyproject.complaints.domain.user.dto.response.UserInfoListResponseDto;
 import com.toyproject.complaints.domain.user.entity.IpAddress;
 import com.toyproject.complaints.domain.user.entity.Role;
 import com.toyproject.complaints.domain.user.entity.User;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -110,4 +112,14 @@ public class UserInfoService {
         return false;
     }
 
+    /**
+     * @throws FailReadUserException -> 조회할 수 있는 유저가 1명도 없을경우
+     */
+    public List<UserInfoListResponseDto> findUserList() {
+        log.info("UserInfoService_findUserList -> 전체 유저 정보 조회");
+        List<User> userList = userRepository.findByActive(true);
+        if(userList.size() == 0)
+            throw new FailReadUserException();
+        return userList.stream().map( u -> u.toUserListInfoResponseDto()).collect(Collectors.toList());
+    }
 }
