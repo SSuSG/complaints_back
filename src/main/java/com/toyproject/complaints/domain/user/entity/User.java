@@ -2,6 +2,7 @@ package com.toyproject.complaints.domain.user.entity;
 
 import com.toyproject.complaints.domain.user.dto.response.LoginSuccessResponseDto;
 import com.toyproject.complaints.domain.user.dto.response.UserInfoListResponseDto;
+import com.toyproject.complaints.domain.user.dto.response.UserInfoResponseDto;
 import lombok.*;
 
 import javax.persistence.*;
@@ -78,5 +79,31 @@ public class User extends BaseTimeEntity{
         String date = createdTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         return UserInfoListResponseDto.builder().userId(id).name(name).email(userEmail)
                 .employeeIdentificationNum(employeeIdentificationNum).phoneNumber(phoneNumber).regDate(date).build();
+    }
+
+    public UserInfoResponseDto toUserInfoResponseDto(){
+        //계정에 등록된 ip들
+        List<String> userIpList = new ArrayList<>();
+
+        if(this.ipList.size() > 0){
+            for (IpAddress ipAddress : this.ipList)
+                userIpList.add(ipAddress.getIp());
+        }
+        String regDateTime = createdTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String updateDateTime = updatedTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        return UserInfoResponseDto.builder().
+                name(name).
+                email(userEmail).
+                phoneNumber(phoneNumber).
+                active(active).
+                userId(id).
+                ipList(userIpList).
+                employeeIdentificationNum(employeeIdentificationNum).
+                regAdminName(registerUser.getName()).
+                regAdminMail(registerUser.getUserEmail()).
+                //updateAdminName(updateUser.getName()).
+                //updateAdminEmail(updateUser.getUserEmail()).
+                regDate(regDateTime).
+                updateDate(updateDateTime).build();
     }
 }
