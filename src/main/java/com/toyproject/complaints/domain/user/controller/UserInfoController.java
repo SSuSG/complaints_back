@@ -2,9 +2,11 @@ package com.toyproject.complaints.domain.user.controller;
 
 import com.toyproject.complaints.domain.user.dto.request.ChangeIpRequestDto;
 import com.toyproject.complaints.domain.user.dto.response.UserInfoListResponseDto;
+import com.toyproject.complaints.domain.user.dto.response.UserInfoResponseDto;
 import com.toyproject.complaints.domain.user.service.UserInfoService;
 import com.toyproject.complaints.global.response.ListResponseResult;
 import com.toyproject.complaints.global.response.ResponseResult;
+import com.toyproject.complaints.global.response.SingleResponseResult;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -65,6 +67,10 @@ public class UserInfoController {
     }
 
     //관리자 한명 조회
+    @GetMapping("/users/{userId}")
+    public SingleResponseResult<UserInfoResponseDto> getUserInfo(@PathVariable Long userId){
+        return new SingleResponseResult<>(userInfoService.findUser(userId));
+    }
 
     //관리자 이메일 수정
 
