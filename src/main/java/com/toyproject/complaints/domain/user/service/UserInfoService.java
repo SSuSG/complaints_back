@@ -2,6 +2,7 @@ package com.toyproject.complaints.domain.user.service;
 
 import com.toyproject.complaints.domain.user.dto.request.ChangeIpRequestDto;
 import com.toyproject.complaints.domain.user.dto.response.UserInfoListResponseDto;
+import com.toyproject.complaints.domain.user.dto.response.UserInfoResponseDto;
 import com.toyproject.complaints.domain.user.entity.IpAddress;
 import com.toyproject.complaints.domain.user.entity.Role;
 import com.toyproject.complaints.domain.user.entity.User;
@@ -9,11 +10,8 @@ import com.toyproject.complaints.domain.user.repository.UserRepository;
 import com.toyproject.complaints.global.exception.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -118,8 +116,24 @@ public class UserInfoService {
     public List<UserInfoListResponseDto> findUserList() {
         log.info("UserInfoService_findUserList -> 전체 유저 정보 조회");
         List<User> userList = userRepository.findByActive(true);
+
         if(userList.size() == 0)
             throw new FailReadUserException();
+
         return userList.stream().map( u -> u.toUserListInfoResponseDto()).collect(Collectors.toList());
+    }
+
+    /**
+     * @throws UserNotFoundException    -> 현재 로그인한 사용자의 계정이 존재하지 않는경우
+     * @throws InValidAccessException   -> 슈퍼관라자가 아닌 사용자가 접근한 경우
+     */
+    public UserInfoResponseDto findUser(Long userId) {
+        log.info("UserInfoService_findUser -> 유저 정보 조회");
+        User curLoginUser = accountService.getLoginUser();
+
+        if(!Role.ADMIN.equals(curLoginUser.getRole()))
+            throw new InValidAccessException();
+
+        return userRepository.findById(userId).orElseThrow( () -> new UserNotFoundException()).toUserInfoResponseDto();
     }
 }
