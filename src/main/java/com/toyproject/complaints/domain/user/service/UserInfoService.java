@@ -1,6 +1,7 @@
 package com.toyproject.complaints.domain.user.service;
 
 import com.toyproject.complaints.domain.user.dto.request.ChangeIpRequestDto;
+import com.toyproject.complaints.domain.user.dto.request.UpdateEmailRequestDto;
 import com.toyproject.complaints.domain.user.dto.response.UserInfoListResponseDto;
 import com.toyproject.complaints.domain.user.dto.response.UserInfoResponseDto;
 import com.toyproject.complaints.domain.user.entity.IpAddress;
@@ -8,10 +9,15 @@ import com.toyproject.complaints.domain.user.entity.Role;
 import com.toyproject.complaints.domain.user.entity.User;
 import com.toyproject.complaints.domain.user.repository.UserRepository;
 import com.toyproject.complaints.global.exception.*;
+import com.toyproject.complaints.global.util.CheckForm;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -24,6 +30,7 @@ public class UserInfoService {
 
     private final UserRepository userRepository;
     private final AccountService accountService;
+    private final CheckForm checkForm;
 
     /**
      * @throws ExistIpAddressException  -> 추가할 IP가 이미 존재하는 경우
@@ -111,11 +118,17 @@ public class UserInfoService {
     }
 
     /**
-     * @throws FailReadUserException -> 조회할 수 있는 유저가 1명도 없을경우
+     * @throws FailReadUserException    -> 조회할 수 있는 유저가 1명도 없을경우
+     * @throws UserNotFoundException    -> 현재 로그인한 사용자의 계정이 존재하지 않는경우
+     * @throws InValidAccessException   -> 슈퍼관라자가 아닌 사용자가 접근한 경우
      */
-    public List<UserInfoListResponseDto> findUserList() {
-        log.info("UserInfoService_findUserList -> 전체 유저 정보 조회");
+    public List<UserInfoListResponseDto> getUserList() {
+        log.info("UserInfoService_getUserList -> 전체 유저 정보 조회");
         List<User> userList = userRepository.findByActive(true);
+        User curLoginUser = accountService.getLoginUser();
+
+        if(!Role.ADMIN.equals(curLoginUser.getRole()))
+            throw new InValidAccessException();
 
         if(userList.size() == 0)
             throw new FailReadUserException();
@@ -127,13 +140,38 @@ public class UserInfoService {
      * @throws UserNotFoundException    -> 현재 로그인한 사용자의 계정이 존재하지 않는경우
      * @throws InValidAccessException   -> 슈퍼관라자가 아닌 사용자가 접근한 경우
      */
-    public UserInfoResponseDto findUser(Long userId) {
-        log.info("UserInfoService_findUser -> 유저 정보 조회");
+    public UserInfoResponseDto findUserInfo(Long userId) {
+        log.info("UserInfoService_findUserInfo -> 유저 정보 조회");
         User curLoginUser = accountService.getLoginUser();
 
         if(!Role.ADMIN.equals(curLoginUser.getRole()))
             throw new InValidAccessException();
 
         return userRepository.findById(userId).orElseThrow( () -> new UserNotFoundException()).toUserInfoResponseDto();
+    }
+
+
+    /**
+     * @throws UserNotFoundException    -> 현재 로그인한 사용자의 계정이 존재하지 않는경우
+     * @throws InValidEmailException    -> 이메일 형식이 올바르지 않은경우
+     * @throws InValidAccessException   -> 슈퍼관라자가 아닌 사용자가 접근한 경우
+     */
+    @Transactional
+    public boolean updateEmail(UpdateEmailRequestDto updateEmailRequestDto) throws UserNotFoundException,InValidEmailException ,InValidAccessException {
+        log.info("UserInfoService_updateEmail -> 유저 이메일 수정");
+        User updatedUser = userRepository.findById(updateEmailRequestDto.getId()).orElseThrow( () -> new UserNotFoundException());
+        User curLoginUser = accountService.getLoginUser();
+
+        if(!checkForm.checkEmail(updateEmailRequestDto.getEmail()))
+            throw new InValidEmailException();
+
+        if(!Role.ADMIN.equals(curLoginUser.getRole()))
+            throw new InValidAccessException();
+
+        updatedUser.updateEmail(curLoginUser , updateEmailRequestDto.getEmail());
+
+        if(updatedUser.getUserEmail().equals(updateEmailRequestDto.getEmail()))
+            return true;
+        return false;
     }
 }
