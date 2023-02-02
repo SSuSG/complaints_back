@@ -81,6 +81,14 @@ public class User extends BaseTimeEntity{
                 .employeeIdentificationNum(employeeIdentificationNum).phoneNumber(phoneNumber).regDate(date).build();
     }
 
+    //Todo update 기록에 대한 엔티티 만들기
+    public void updateEmail(User curLoginUser , String updateEmail){
+        this.doUpdateUsers.add(curLoginUser);
+        this.updatedUser = this;
+        this.updatedTime = LocalDateTime.now();
+        this.userEmail = updateEmail;
+    }
+
     public UserInfoResponseDto toUserInfoResponseDto(){
         //계정에 등록된 ip들
         List<String> userIpList = new ArrayList<>();
