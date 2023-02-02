@@ -1,6 +1,7 @@
 package com.toyproject.complaints.domain.user.controller;
 
 import com.toyproject.complaints.domain.user.dto.request.ChangeIpRequestDto;
+import com.toyproject.complaints.domain.user.dto.request.UpdateEmailRequestDto;
 import com.toyproject.complaints.domain.user.dto.response.UserInfoListResponseDto;
 import com.toyproject.complaints.domain.user.dto.response.UserInfoResponseDto;
 import com.toyproject.complaints.domain.user.service.UserInfoService;
@@ -59,20 +60,36 @@ public class UserInfoController {
     @ApiOperation(value = "유저 리스트 조회" , notes = "전체 유저정보 반환")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "전체 유저정보 반환 성공"),
-            @ApiResponse(code = 408, message = "조회할 수 있는 유저가 1명도 없음"),
+            @ApiResponse(code = 403, message = "관리자권한이 없는 사용자의 접근"),
+            @ApiResponse(code = 408, message = "현재 로그인한 관리자를 찾을수 없음"),
+            @ApiResponse(code = 408, message = "조회할 수 있는 유저가 1명도 없음")
     })
     @GetMapping("/users")
     public ListResponseResult<UserInfoListResponseDto> getUserList(){
-        return new ListResponseResult<>(userInfoService.findUserList());
+        return new ListResponseResult<>(userInfoService.getUserList());
     }
 
-    //관리자 한명 조회
+    @ApiOperation(value = "유저 조회" , notes = "유저정보 조회")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "유저정보 반환 성공"),
+            @ApiResponse(code = 403, message = "관리자권한이 없는 사용자의 접근"),
+            @ApiResponse(code = 408, message = "현재 로그인한 관리자를 찾을수 없음"),
+            @ApiResponse(code = 408, message = "조회할 수 있는 유저가 1명도 없음")
+    })
     @GetMapping("/users/{userId}")
-    public SingleResponseResult<UserInfoResponseDto> getUserInfo(@PathVariable Long userId){
-        return new SingleResponseResult<>(userInfoService.findUser(userId));
+    public SingleResponseResult<UserInfoResponseDto> findUserInfo(@PathVariable Long userId){
+        return new SingleResponseResult<>(userInfoService.findUserInfo(userId));
     }
 
     //관리자 이메일 수정
+    @PostMapping("/users/email")
+    public ResponseResult updateEmail(@Valid @RequestBody UpdateEmailRequestDto updateEmailRequestDto){
+        if(userInfoService.updateEmail(updateEmailRequestDto)){
+            return ResponseResult.successResponse;
+        }else{
+            return ResponseResult.failResponse;
+        }
+    }
 
     //관리자 휴대폰 수정
 
