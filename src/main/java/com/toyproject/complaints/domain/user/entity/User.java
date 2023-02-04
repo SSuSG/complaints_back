@@ -4,6 +4,7 @@ import com.toyproject.complaints.domain.user.dto.response.LoginSuccessResponseDt
 import com.toyproject.complaints.domain.user.dto.response.UserInfoListResponseDto;
 import com.toyproject.complaints.domain.user.dto.response.UserInfoResponseDto;
 import lombok.*;
+import org.hibernate.envers.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -11,13 +12,19 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
+import static org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED;
+
+
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User extends BaseTimeEntity{
+@Entity
+@Audited
+@AuditTable("user_audit")
+@AuditOverride(forClass=BaseEntity.class)
+public class User extends BaseEntity{
 
     @Id
     @GeneratedValue
@@ -34,28 +41,15 @@ public class User extends BaseTimeEntity{
     private boolean active;
     private Role role;
 
-    @OneToOne
-    @JoinColumn(name = "register_user_id")
-    private User registerUser;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "updated_user_id")
-    private User updatedUser;
-
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "updatedUser")
-    private List<User> doUpdateUsers;
-
+    //@NotAudited                               //연관관계 테이블 생성도 하지 않고 추적하지도 않을거라면 엔티티 필드에 다음과 같은 어노테이션을 추가
+    //@Audited(targetAuditMode = NOT_AUDITED)   //연관관계 추적 테이블 생성은 되지만 추적하진 않을거라면 엔티티 내 필드에 다음과 같이 어노테이션을 추가
     @OneToMany(mappedBy = "user" , cascade =  CascadeType.ALL)
+    //@AuditMappedBy(mappedBy = "user")
     private List<IpAddress> ipList = new ArrayList<>();
 
-    //계정 생성시 등록자,수정자,등록시간,수정시간 초기화
-    public void initialUserAndTimeAtCreateAccount(User adminAccount , String userPw){
-        this.doUpdateUsers = new ArrayList<>();
-        this.registerUser = adminAccount;
+    //계정 생성시 비밀번호 저장
+    public void initialUserPw(String userPw){
         this.userPw = "{noop}" + userPw;
-        this.doUpdateUsers.add(adminAccount);
-        this.createdTime = LocalDateTime.now();
-        this.updatedTime = LocalDateTime.now();
         this.active = true;
     }
 
@@ -83,8 +77,8 @@ public class User extends BaseTimeEntity{
 
     //Todo update 기록에 대한 엔티티 만들기
     public void updateEmail(User curLoginUser , String updateEmail){
-        this.doUpdateUsers.add(curLoginUser);
-        this.updatedUser = this;
+        //this.doUpdateUsers.add(curLoginUser);
+        //this.updatedUser = this;
         this.updatedTime = LocalDateTime.now();
         this.userEmail = updateEmail;
     }
@@ -107,8 +101,8 @@ public class User extends BaseTimeEntity{
                 userId(id).
                 ipList(userIpList).
                 employeeIdentificationNum(employeeIdentificationNum).
-                regAdminName(registerUser.getName()).
-                regAdminMail(registerUser.getUserEmail()).
+                //regAdminName(registerUser.getName()).
+                //regAdminMail(registerUser.getUserEmail()).
                 //updateAdminName(updateUser.getName()).
                 //updateAdminEmail(updateUser.getUserEmail()).
                 regDate(regDateTime).

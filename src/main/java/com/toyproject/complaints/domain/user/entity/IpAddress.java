@@ -1,6 +1,10 @@
 package com.toyproject.complaints.domain.user.entity;
 
 import lombok.*;
+import org.hibernate.envers.AuditJoinTable;
+import org.hibernate.envers.AuditOverride;
+import org.hibernate.envers.AuditTable;
+import org.hibernate.envers.Audited;
 
 import javax.persistence.*;
 
@@ -10,7 +14,10 @@ import javax.persistence.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class IpAddress {
+@Audited
+//@AuditTable("ip_audit")
+@AuditOverride(forClass=BaseEntity.class)
+public class IpAddress extends BaseEntity{
 
     @Id
     @GeneratedValue
@@ -21,5 +28,6 @@ public class IpAddress {
 
     @ManyToOne(fetch = FetchType.LAZY , cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
+    //@AuditJoinTable
     private User user;
 }
