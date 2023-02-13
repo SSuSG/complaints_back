@@ -125,10 +125,6 @@ public class UserInfoService {
     public List<UserInfoListResponseDto> getUserList() {
         log.info("UserInfoService_getUserList -> 전체 유저 정보 조회");
         List<User> userList = userRepository.findByActive(true);
-        User curLoginUser = accountService.getLoginUser();
-
-        if(!Role.ADMIN.equals(curLoginUser.getRole()))
-            throw new InValidAccessException();
 
         if(userList.size() == 0)
             throw new FailReadUserException();
