@@ -2,6 +2,8 @@ package com.toyproject.complaints.domain.user.service;
 
 import com.toyproject.complaints.domain.user.dto.request.ChangeIpRequestDto;
 import com.toyproject.complaints.domain.user.dto.request.UpdateEmailRequestDto;
+import com.toyproject.complaints.domain.user.dto.request.UpdatePhoneNumberRequestDto;
+import com.toyproject.complaints.domain.user.dto.response.MyPageResponseDto;
 import com.toyproject.complaints.domain.user.dto.response.UserInfoListResponseDto;
 import com.toyproject.complaints.domain.user.dto.response.UserInfoResponseDto;
 import com.toyproject.complaints.domain.user.entity.IpAddress;
@@ -42,7 +44,7 @@ public class UserInfoService {
     @Transactional
     public boolean addIpAddress(ChangeIpRequestDto changeIpRequestDto) throws ExistIpAddressException, UserNotFoundException, InValidAccessException, InValidIpException , AddIpFailException{
         log.info("UserInfoService_addIpAddress -> 아이피 추가");
-        if(!isValidIpForm(changeIpRequestDto.getIp()))
+        if(!checkForm.checkIp(changeIpRequestDto.getIp()))
             throw new InValidIpException();
 
         User curLoginUser = accountService.getLoginUser();
@@ -52,13 +54,6 @@ public class UserInfoService {
             throw new InValidAccessException();
         addIpAddressInDB(ipAddedUser, changeIpRequestDto.getIp());
         return true;
-    }
-
-    private boolean isValidIpForm(String ip){
-        log.info("UserInfoService_isValidIpForm -> IP유효성 검사");
-        String ipRegex = "(\\d{1,2}|1\\d\\d|2[0-4]\\d|25[0-5])\\.(\\d{1,2}|1\\d\\d|2[0-4]\\d|25[0-5])\\.(\\d{1,2}|1\\d\\d|2[0-4]\\d|25[0-5])\\.(\\d{1,2}|1\\d\\d|2[0-4]\\d|25[0-5])";
-        Pattern pattern = Pattern.compile(ipRegex);
-        return pattern.matcher(ip).matches();
     }
 
     private void addIpAddressInDB(User ipAddedUser , String addIpAddress){
@@ -85,6 +80,11 @@ public class UserInfoService {
         return false;
     }
 
+    /**
+     * @throws UserNotFoundException    -> 현재 로그인한 사용자의 계정이 존재하지 않는경우
+     * @throws InValidAccessException   -> 슈퍼관라자가 아닌 사용자가 접근한 경우
+     * @throws DeleteIpFailException    -> Ip의 갯수가 1개 미만일 경우
+     */
     @Transactional
     public boolean deleteIpAddress(ChangeIpRequestDto changeIpRequestDto) {
         log.info("UserInfoService_deleteIpAddress -> 아이피 삭제");
@@ -99,11 +99,10 @@ public class UserInfoService {
         return false;
     }
 
-    private boolean deleteIpAddressInDb(User ipDeletedUser , String deleteIpAddress){
+    private boolean deleteIpAddressInDb(User ipDeletedUser , String deleteIpAddress) {
         log.info("UserInfoService_deleteIpAddressInDb -> 아이피 삭제 구체적인 로직");
         List<IpAddress> ipList = ipDeletedUser.getIpList();
 
-        //등록된 ip의 갯수가 1개 미만이라면 오류
         if(ipList.size() < 1)
             throw new DeleteIpFailException();
 
@@ -150,10 +149,10 @@ public class UserInfoService {
     /**
      * @throws UserNotFoundException    -> 현재 로그인한 사용자의 계정이 존재하지 않는경우
      * @throws InValidEmailException    -> 이메일 형식이 올바르지 않은경우
-     * @throws InValidAccessException   -> 슈퍼관라자가 아닌 사용자가 접근한 경우
+     * @throws InValidAccessException   -> 슈퍼관리자가 아닌 사용자가 접근한 경우
      */
     @Transactional
-    public boolean updateEmail(UpdateEmailRequestDto updateEmailRequestDto) throws UserNotFoundException,InValidEmailException ,InValidAccessException {
+    public boolean updateEmail(UpdateEmailRequestDto updateEmailRequestDto){
         log.info("UserInfoService_updateEmail -> 유저 이메일 수정");
         User updatedUser = userRepository.findById(updateEmailRequestDto.getId()).orElseThrow( () -> new UserNotFoundException());
         User curLoginUser = accountService.getLoginUser();
@@ -164,10 +163,46 @@ public class UserInfoService {
         if(!Role.ADMIN.equals(curLoginUser.getRole()))
             throw new InValidAccessException();
 
-        updatedUser.updateEmail(curLoginUser , updateEmailRequestDto.getEmail());
+        updatedUser.updateEmail(updateEmailRequestDto.getEmail());
 
         if(updatedUser.getUserEmail().equals(updateEmailRequestDto.getEmail()))
             return true;
         return false;
+    }
+
+    /**
+     * @throws UserNotFoundException        -> 현재 로그인한 사용자의 계정이 존재하지 않는경우
+     * @throws InValidPhoneNumberException  -> 휴대폰 형식이 올바르지 않은경우
+     * @throws InValidAccessException       -> 슈퍼관리자가 아닌 사용자가 접근한 경우
+     */
+    @Transactional
+    public boolean updatePhoneNumber(UpdatePhoneNumberRequestDto updatePhoneNumberRequestDto){
+        log.info("UserInfoService_updatePhoneNumber -> 유저 휴대폰번호 수정");
+        User updatedUser = userRepository.findById(updatePhoneNumberRequestDto.getId()).orElseThrow( () -> new UserNotFoundException());
+        User curLoginUser = accountService.getLoginUser();
+
+        if(!checkForm.checkPhoneNumber(updatePhoneNumberRequestDto.getPhoneNumber()))
+            throw new InValidPhoneNumberException();
+
+        if(!Role.ADMIN.equals(curLoginUser.getRole()))
+            throw new InValidAccessException();
+
+        updatedUser.updatePhoneNumber(updatePhoneNumberRequestDto.getPhoneNumber());
+        if(updatedUser.getPhoneNumber().equals(updatePhoneNumberRequestDto.getPhoneNumber()))
+            return true;
+        return false;
+    }
+
+    /**
+     * @throws UserNotFoundException        -> 현재 사용자의 계정이 존재하지 않는경우
+     * @throws InValidAccessException       -> 접근한 유저페이지와 로그인정보가 일치하지 않는 경우
+     */
+    public MyPageResponseDto getMyPageInfo(Long userId) {
+        log.info("UserInfoService_getMyPageInfo -> 마이 페이지 조회");
+        User curLoginUser = accountService.getLoginUser();
+        if(!curLoginUser.getId().equals(userId))
+            throw new InValidAccessException();
+
+        return userRepository.findById(userId).orElseThrow( () -> new UserNotFoundException()).toMyPageResponseDto();
     }
 }
