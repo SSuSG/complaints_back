@@ -11,6 +11,7 @@ import javax.validation.constraints.NotNull;
 public class UpdateEmailRequestDto {
     @NotNull
     private Long id;
+
     @NotBlank
     private String email;
 }

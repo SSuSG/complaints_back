@@ -42,13 +42,12 @@ public class AccountController {
             @ApiResponse(code = 409, message = "중복이메일 존재"),
             @ApiResponse(code = 500, message = "이메일 전송 실패"),
     })
-    @PostMapping("/accounts")
+    @PostMapping("admins/accounts")
     public ResponseResult createUserAccount(@Valid @RequestBody CreateUserAccountRequestDto createUserAccountRequestDto) throws MessagingException {
         log.info("AccountController_createUserAccount || 관리자가 새로운 계정 생성");
         if(accountService.createUserAccount(createUserAccountRequestDto) != null)
             return ResponseResult.successResponse;
-        else
-            return ResponseResult.failResponse;
+    return ResponseResult.failResponse;
     }
 
     @ApiOperation(value = "계정잠금해제 인증번호 요청" , notes = "사용자가 잠금된 계정을 해제하기위해 인증번호를 요청")
@@ -74,8 +73,7 @@ public class AccountController {
         log.info("SignController_authAuthenticationKey");
         if(accountService.RequestUnLockAndIfSuccessSendTempPw(certificateAuthenticationKeyRequestDto))
             return ResponseResult.successResponse;
-        else
-            return ResponseResult.failResponse;
+        return ResponseResult.failResponse;
     }
 
     //계정 탈퇴?

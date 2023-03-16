@@ -1,7 +1,6 @@
 package com.toyproject.complaints.global.util;
 
-import com.toyproject.complaints.domain.user.entity.User;
-import com.toyproject.complaints.domain.user.entity.UserDetailsImpl;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.core.Authentication;

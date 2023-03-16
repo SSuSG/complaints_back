@@ -1,4 +1,11 @@
 spring:
+  jpa:
+    org:
+      hibernate:
+        envers:
+          audit_table_suffix: _history
+          revision_field_name: rev_id
+          store_data_at_delete: true
   mail:
     host: smtp.gmail.com
     port: 587

@@ -12,10 +12,8 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
@@ -45,15 +43,22 @@ public class LoginController {
 
         if(LoginStatus.SUCCESS.equals(loginResult))
             return new SingleResponseResult<LoginSuccessResponseDto>(loginService.getLoginUserInfo(loginRequestDto));
-        else if(LoginStatus.LOCK.equals(loginResult))
+        if(LoginStatus.LOCK.equals(loginResult))
             return ResponseResult.LockResponse;
-        else if(LoginStatus.PWFAIL.equals(loginResult))
+        if(LoginStatus.PWFAIL.equals(loginResult))
             throw new LoginFailException();
-        else if(LoginStatus.IPFAIL.equals(loginResult))
+        if(LoginStatus.IPFAIL.equals(loginResult))
             throw new LoginFailException();
-        else
-            return ResponseResult.failResponse;
+        return ResponseResult.failResponse;
     }
 
+    @GetMapping("/users/hi")
+    public String test(){
+        return "success";
+    }
 
+    @GetMapping("/admins/hi")
+    public String test2(){
+        return "success2";
+    }
 }

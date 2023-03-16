@@ -18,6 +18,7 @@ public class InitDb {
 
 //    @PostConstruct
 //    public void init() {
+//
 //        initService.dbInit1();
 //    }
 
@@ -30,7 +31,6 @@ public class InitDb {
         private final PasswordEncoder passwordEncoder;
 
         public void dbInit1() {
-
             User superAdmin = User.builder()
                     .userEmail("admin@qwe.com")
                     .userPw(passwordEncoder.encode("1234"))

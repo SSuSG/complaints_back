@@ -1,6 +1,7 @@
 package com.toyproject.complaints.domain.user.entity;
 
 import com.toyproject.complaints.domain.user.dto.response.LoginSuccessResponseDto;
+import com.toyproject.complaints.domain.user.dto.response.MyPageResponseDto;
 import com.toyproject.complaints.domain.user.dto.response.UserInfoListResponseDto;
 import com.toyproject.complaints.domain.user.dto.response.UserInfoResponseDto;
 import lombok.*;
@@ -76,11 +77,14 @@ public class User extends BaseEntity{
     }
 
     //Todo update 기록에 대한 엔티티 만들기
-    public void updateEmail(User curLoginUser , String updateEmail){
-        //this.doUpdateUsers.add(curLoginUser);
-        //this.updatedUser = this;
+    public void updateEmail(String updateEmail){
         this.updatedTime = LocalDateTime.now();
         this.userEmail = updateEmail;
+    }
+
+    public void updatePhoneNumber(String phoneNumber) {
+        this.updatedTime = LocalDateTime.now();
+        this.phoneNumber = phoneNumber;
     }
 
     public UserInfoResponseDto toUserInfoResponseDto(){
@@ -107,5 +111,19 @@ public class User extends BaseEntity{
                 //updateAdminEmail(updateUser.getUserEmail()).
                 regDate(regDateTime).
                 updateDate(updateDateTime).build();
+    }
+
+
+    public MyPageResponseDto toMyPageResponseDto() {
+        //계정에 등록된 ip들
+        List<String> userIpList = new ArrayList<>();
+
+        if(this.ipList.size() > 0){
+            for (IpAddress ipAddress : this.ipList) {
+                userIpList.add(ipAddress.getIp());
+            }
+        }
+        return MyPageResponseDto.builder().name(name).email(userEmail).phoneNumber(phoneNumber)
+                .userId(id).ipList(userIpList).employeeIdentificationNum(employeeIdentificationNum).build();
     }
 }

@@ -31,14 +31,26 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 
 	//스웨거
-	implementation 'io.springfox:springfox-boot-starter:3.0.0'
-	implementation "io.springfox:springfox-swagger-ui:3.0.0"
+	//implementation 'io.springfox:springfox-boot-starter:3.0.0'
+	//implementation "io.springfox:springfox-swagger-ui:3.0.0"
+	implementation group: 'io.springfox', name: 'springfox-swagger2', version: '2.9.2'
+	implementation group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.9.2'
 
 	// 이메일 전송
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 
 	//jwt
 	implementation 'io.jsonwebtoken:jjwt:0.9.1'
+
+	// https://mvnrepository.com/artifact/org.springframework.data/spring-data-envers // history관리
+	implementation group: 'org.springframework.data', name: 'spring-data-envers', version: '2.7.6'
+
+	//cool sms
+	//compileOnly group: 'net.nurigo', name: 'javaSDK', version: '2.2'
+	implementation group: 'net.nurigo', name: 'javaSDK', version: '2.2'
+
+	//aop추가
+	implementation 'org.springframework.boot:spring-boot-starter-aop:2.6.4'
 }
 
 tasks.named('test') {

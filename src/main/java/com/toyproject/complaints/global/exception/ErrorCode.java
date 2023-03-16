@@ -11,7 +11,7 @@ public enum ErrorCode {
 
     PARSE_EXCEPTION(400,"날짜형식이 올바르지 않습니다."),
     NO_LOGIN_EXCEPTION(401,"로그인상태가 아닙니다. 로그인 해주세요."),
-    INVALID_ACCESS_EXCEPTION(403,"일반회원은 접근이 불가능합니다."),
+    INVALID_ACCESS_EXCEPTION(403,"회원님은 접근이 불가능합니다."),
     INVALID_EMAIL_EXCEPTION(406,"잘못된 이메일 형식입니다."),
     INVALID_IP_EXCEPTION(406,"잘못된 IP 형식입니다."),
     INVALID_PHONE_NUMBER_EXCEPTION(406,"잘못된 핸드폰번호 형식입니다."),

@@ -10,8 +10,8 @@ public class ListResponseResult<T> extends ResponseResult{
 
     private List<T> data;
 
-    public ListResponseResult(int statusCode, String messages, String developerMessage, LocalDateTime timestamp , List<T> data) {
-        super(statusCode, messages, developerMessage, timestamp);
+    public ListResponseResult(List<T> data) {
+        super(successResponse.statusCode, successResponse.messages, successResponse.developerMessage, successResponse.timestamp);
         this.data = data;
     }
 }
